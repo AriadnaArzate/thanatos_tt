@@ -1,6 +1,8 @@
 .venv/
-venv/
-__pycache__/
-*.pyc
 .env
-.ipynb_checkpoints/
+tmp_audio/
+voices/*.onnx
+voices/*.onnx.json
+__pycache__/
+*.wav
+*.mp3
