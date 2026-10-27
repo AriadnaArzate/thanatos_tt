@@ -137,12 +137,14 @@ async def conversar(
 
 @app.get("/audio/{nombre}")
 async def obtener_audio(nombre: str):
-    """Sirve el .wav generado. `Path(nombre).name` evita que alguien pida
-    rutas como ../../algo para leer archivos fuera de la carpeta de audios."""
+    """Sirve el audio generado (.mp3 de edge-tts o .wav de Piper).
+    `Path(nombre).name` evita que alguien pida rutas como ../../algo para
+    leer archivos fuera de la carpeta de audios."""
     ruta = settings.audio_dir / Path(nombre).name
     if not ruta.is_file():
         raise HTTPException(404, "Audio no encontrado")
-        tipo = "audio/mpeg" if ruta.suffix == ".mp3" else "audio/wav"
+
+    tipo = "audio/mpeg" if ruta.suffix == ".mp3" else "audio/wav"
     return FileResponse(ruta, media_type=tipo)
 
 # TODO: los audios de respuesta se acumulan en tmp_audio/. Falta una limpieza
