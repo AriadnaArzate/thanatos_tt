@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     whisper_model: str = "small"
     whisper_device: str = "cpu"          # "cuda" si tienes GPU NVIDIA
     whisper_compute_type: str = "int8"   # int8 = rápido y ligero en CPU
+    whisper_beam_size: int = 5           # 1 = más rápido; 5 = más preciso
 
     # ---------- LLM (Ollama) ----------
     ollama_host: str = "http://localhost:11434"
@@ -47,6 +48,25 @@ class Settings(BaseSettings):
     # ---------- Conversación y archivos ----------
     max_history_turns: int = 6           # turnos (usuario+asistente) que recuerda
     audio_dir: Path = Path("tmp_audio")  # audios temporales de entrada/salida
+
+    # ---------- Base de datos ----------
+    database_url: str = "sqlite:///./thanatos.db"   # relativa a donde corres uvicorn
+
+    # ---------- Autenticación (JWT) ----------
+    jwt_secret: str = "CAMBIAR-EN-ENV"              # OBLIGATORIO definirla en .env
+    jwt_algoritmo: str = "HS256"
+    jwt_expira_minutos: int = 60 * 24 * 7           # 7 días: el adulto mayor no debe loguearse a diario
+
+    # ---------- Ejemplos de estilo (dataset semilla) ----------
+    dataset_path: str = "data/dataset_respuestas_empaticas_es_mx_v1.xlsx"
+    ejemplos_activos: bool = True        # False = responder sin ejemplos (útil para comparar)
+    # Estados de validación del Excel cuyas filas se pueden usar como ejemplos.
+    # "pendiente" se incluye porque la tanatóloga revisó una MUESTRA y consideró
+    # correcto el dataset (ver data/registro_validacion.md). Las filas "corregir"
+    # y "rechazada" NUNCA se usan, aunque se pongan aquí.
+    ejemplos_estados_permitidos: str = "aprobada,pendiente"
+    ejemplos_k: int = 3                  # cuántos ejemplos se muestran al modelo
+    embedding_model: str = "bge-m3"      # modelo de embeddings de Ollama
 
 
 settings = Settings()

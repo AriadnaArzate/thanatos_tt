@@ -4,5 +4,10 @@ python-multipart
 pydantic-settings
 faster-whisper
 ollama
-edge-tts
+piper-tts
 httpx
+edge-tts
+sqlalchemy
+pyjwt
+bcrypt
+openpyxl

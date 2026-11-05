@@ -1,0 +1,27 @@
+# Entornos y secretos
+.venv/
+.env
+secretos/
+
+# Base de datos con conversaciones
+*.db
+*.db-wal
+*.db-shm
+
+# Audios (pruebas, grabaciones y temporales)
+*.wav
+*.mp3
+*.m4a
+tmp_audio/
+
+# Modelos de voz (pesados; se descargan aparte)
+*.onnx
+*.onnx.json
+
+# Python / Node
+__pycache__/
+node_modules/
+.expo/
+
+# Copias de respaldo locales
+respaldo-git-backend/

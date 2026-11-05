@@ -1,8 +1,0 @@
-.venv/
-.env
-tmp_audio/
-voices/*.onnx
-voices/*.onnx.json
-__pycache__/
-*.wav
-*.mp3
