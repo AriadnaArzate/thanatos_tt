@@ -11,16 +11,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import select  # noqa: E402
 
-from app import models  # noqa: E402,F401  (registra las tablas)
-from app.db import Base, SessionLocal, engine  # noqa: E402
+from app import migraciones  # noqa: E402
+from app.db import SessionLocal  # noqa: E402
 from app.models import Rol, Usuario  # noqa: E402
 from app.security import hashear_password  # noqa: E402
 
 
 def main() -> None:
-    Base.metadata.create_all(engine)
+    migraciones.aplicar()   # deja la base al día (tablas y columnas nuevas)
     nombre = input("Nombre completo: ").strip()
     usuario = input("Usuario: ").strip().lower()
+    telefono = input("Teléfono para avisos por WhatsApp (con lada, opcional): ").strip()
     password = getpass.getpass("Contraseña (mínimo 8 caracteres): ")
     if len(nombre) < 2 or len(usuario) < 3 or not 8 <= len(password) <= 72:
         sys.exit("Datos inválidos: revisa longitudes (contraseña de 8 a 72 caracteres).")
@@ -28,7 +29,7 @@ def main() -> None:
     with SessionLocal() as db:
         if db.scalar(select(Usuario).where(Usuario.usuario == usuario)):
             sys.exit("Ese usuario ya existe.")
-        db.add(Usuario(nombre=nombre, usuario=usuario,
+        db.add(Usuario(nombre=nombre, usuario=usuario, telefono=telefono or None,
                        password_hash=hashear_password(password), rol=Rol.TANATOLOGO.value))
         db.commit()
     print(f"Tanatólogo '{usuario}' creado.")

@@ -9,6 +9,14 @@ class NuevoUsuarioIn(BaseModel):
     password: str = Field(min_length=8, max_length=72)
 
 
+class RegistroTanatologoIn(NuevoUsuarioIn):
+    """Registro de un tanatólogo desde la pantalla de inicio de sesión."""
+    # Teléfono para los avisos por WhatsApp: dígitos, +, espacios o guiones.
+    telefono: str | None = Field(default=None, pattern=r"^[0-9+\- ]{8,30}$")
+    # Solo se exige si el servidor tiene CODIGO_REGISTRO_TANATOLOGO configurado.
+    codigo: str | None = Field(default=None, max_length=100)
+
+
 class UsuarioOut(BaseModel):
     """Lo que devolvemos de un usuario. Nunca incluye el hash de la contraseña."""
     model_config = ConfigDict(from_attributes=True)

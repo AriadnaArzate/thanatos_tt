@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
+    horas_vigencia_emocion: int = 24   # cuánto tiempo la emoción registrada ajusta el tono del modelo
+    
 
     # ---------- ASR (Whisper vía faster-whisper) ----------
     # Tamaños: tiny < base < small < medium < large-v3 (más grande = más
@@ -67,6 +69,13 @@ class Settings(BaseSettings):
     ejemplos_estados_permitidos: str = "aprobada,pendiente"
     ejemplos_k: int = 3                  # cuántos ejemplos se muestran al modelo
     embedding_model: str = "bge-m3"      # modelo de embeddings de Ollama
+
+    # ---------- Riesgo y alertas ----------
+    # Texto con recursos de ayuda (líneas, contactos) que se agrega a la respuesta de
+    # riesgo ROJO. Lo debe definir y verificar la tanatóloga; vacío = no se agrega nada.
+    texto_recursos_ayuda: str = ""
+    whatsapp_activo: bool = False        # False = los avisos solo se registran en el log
+    dias_semaforo: int = 7               # ventana del semáforo del dashboard
 
 
 settings = Settings()
