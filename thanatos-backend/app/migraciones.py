@@ -16,6 +16,11 @@ logger = logging.getLogger("thanatos.migraciones")
 _COLUMNAS_NUEVAS = [
     ("sesiones", "tipo", "VARCHAR(30) NOT NULL DEFAULT 'conversacion'"),
     ("usuarios", "telefono", "VARCHAR(30)"),
+    ("usuarios", "correo", "VARCHAR(60)"),
+    ("usuarios", "edad", "INTEGER"),
+    ("usuarios", "notif_app", "BOOLEAN NOT NULL DEFAULT 1"),
+    ("usuarios", "guia_auditiva", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("usuarios", "numero_paciente", "VARCHAR(12)"),
 ]
 
 
@@ -27,3 +32,9 @@ def aplicar() -> None:
             with engine.begin() as conexion:
                 conexion.execute(text(f"ALTER TABLE {tabla} ADD COLUMN {columna} {definicion}"))
             logger.info("Migración: se agregó la columna %s.%s", tabla, columna)
+        # SQLite no permite UNIQUE en ALTER TABLE; se garantiza con un índice aparte.
+    with engine.begin() as conexion:
+        conexion.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_usuarios_numero_paciente "
+            "ON usuarios(numero_paciente)"
+        ))

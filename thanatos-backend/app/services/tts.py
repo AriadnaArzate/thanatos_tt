@@ -3,10 +3,12 @@ Capa de TTS: texto -> voz.
 
 Principal: edge-tts (voces neuronales de Microsoft Edge; gratis, sin cuenta,
 requiere internet). NO es una API oficial: puede cambiar sin aviso.
+Respaldo: Piper (local). Si edge-tts falla (sin internet, servicio caído) y la
+voz de Piper existe, se usa Piper para que la conversación no se corte.
 
 PRIVACIDAD: a Microsoft solo viaja el TEXTO DE LA RESPUESTA del acompañante,
-nunca el audio ni las palabras del usuario. 
-
+nunca el audio ni las palabras del usuario. Aun así, la respuesta puede
+repetir algo que la persona contó; es un punto a mencionar en la tesis.
 
 Formato: edge-tts genera MP3 y Piper genera WAV, por eso `sintetizar` recibe
 una ruta SIN extensión y devuelve la ruta final con la extensión correcta.

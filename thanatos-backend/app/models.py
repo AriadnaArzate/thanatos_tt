@@ -34,6 +34,11 @@ class Usuario(Base):
     tanatologo_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
     # Solo tanatólogos: teléfono para los avisos por WhatsApp.
     telefono: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    correo: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    edad: Mapped[int | None] = mapped_column(nullable=True)
+    notif_app: Mapped[bool] = mapped_column(default=True, server_default="1")
+    guia_auditiva: Mapped[bool] = mapped_column(default=False, server_default="0")
+    numero_paciente: Mapped[str | None] = mapped_column(String(12), nullable=True, index=True)
     activo: Mapped[bool] = mapped_column(default=True)
     creado_en: Mapped[datetime] = mapped_column(default=_ahora)
 

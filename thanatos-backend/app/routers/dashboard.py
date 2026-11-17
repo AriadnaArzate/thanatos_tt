@@ -92,6 +92,7 @@ def listar_pacientes(tanatologo: SoloTanatologo, db: BD, dias: int | None = None
         )
         filas.append({
             "id": p.id, "nombre": p.nombre, "usuario": p.usuario,
+            "numero_paciente": p.numero_paciente,
             "semaforo": explicacion.nivel_maximo(senales),
             "motivo": explicacion.motivo_corto(senales),
             "ultima_actividad": _ultimo_mensaje(db, p.id),
