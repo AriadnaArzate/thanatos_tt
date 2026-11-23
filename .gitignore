@@ -25,3 +25,7 @@ node_modules/
 
 # Copias de respaldo locales
 respaldo-git-backend/
+s
+.claude/
+
+thanatos-app/

@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     texto_recursos_ayuda: str = ""
     whatsapp_activo: bool = False        # False = los avisos solo se registran en el log
     dias_semaforo: int = 7               # ventana del semáforo del dashboard
+    # Si tiene valor, se pide como "Código de registro" al crear una cuenta de tanatólogo.
+    # Vacío = registro abierto (verificar tanatólogos queda como trabajo a futuro).
+    codigo_registro_tanatologo: str = ""
 
 
 settings = Settings()

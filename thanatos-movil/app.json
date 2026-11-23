@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Thanatos",
+    "slug": "thanatos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F4F6F3",
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Thanatos usa el micrófono para escuchar lo que usted quiera compartir en \"Hablar ahora\".",
+        "NSAppTransportSecurity": { "NSAllowsArbitraryLoads": true }
+      }
+    },
+    "android": {
+      "package": "mx.ipn.escom.thanatos",
+      "permissions": ["android.permission.RECORD_AUDIO"]
+    },
+    "plugins": [
+      ["expo-audio", { "microphonePermission": "Thanatos usa el micrófono para escuchar lo que usted quiera compartir en \"Hablar ahora\"." }],
+      "expo-secure-store",
+      "expo-font",
+      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
+    ]
+  }
+}
