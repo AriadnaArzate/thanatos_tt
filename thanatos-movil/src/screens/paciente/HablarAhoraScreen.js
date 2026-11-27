@@ -84,6 +84,7 @@ export default function HablarAhoraScreen({ navigation }) {
     try {
       await grabadora.stop();
       const uri = grabadora.uri;
+      console.log('[hablar] audio grabado en', uri);
       await modoReproduccion();
       const r = await api.conversar(uri, sesionId.current);
       if (miTurno !== turno.current) return;

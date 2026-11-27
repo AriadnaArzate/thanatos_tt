@@ -21,6 +21,7 @@ _COLUMNAS_NUEVAS = [
     ("usuarios", "notif_app", "BOOLEAN NOT NULL DEFAULT 1"),
     ("usuarios", "guia_auditiva", "BOOLEAN NOT NULL DEFAULT 0"),
     ("usuarios", "numero_paciente", "VARCHAR(12)"),
+    ("sesiones", "segundos_usuario", "FLOAT NOT NULL DEFAULT 0"),
 ]
 
 

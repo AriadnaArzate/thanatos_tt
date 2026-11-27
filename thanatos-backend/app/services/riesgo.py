@@ -22,7 +22,7 @@ y se ajusta este archivo hasta que todos pasen.
 
 ESTADO DE VALIDACIÓN: las frases, las categorías y los textos de este módulo los
 definió el desarrollador a partir de expresiones frecuentes; NO hay todavía una
-validación formal de la tanatóloga. Se registra en data/registro_validacion_riesgo.md.
+validación formal de la tanatóloga. Se registra en data/registro_validacion.md.
 
 LÍMITES: es una lista de patrones. No entiende contexto, ironía ni frases que no
 prevé, y puede fallar con errores de transcripción. No sustituye un protocolo

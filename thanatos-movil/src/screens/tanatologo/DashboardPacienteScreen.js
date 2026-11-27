@@ -1,8 +1,8 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text } from 'react-native';
 import { api } from '../../api';
-import { BotonRegresar } from '../../components/Botones';
+import { BotonClaro, BotonRegresar } from '../../components/Botones';
 import Fondo from '../../components/Fondo';
 import { Medidor, Pastilla, Semaforo, Tarjeta, Titulo } from '../../components/Visuales';
 import { colores, fuentes, s } from '../../theme';
@@ -28,6 +28,29 @@ export default function DashboardPacienteScreen({ navigation, route }) {
 
   const nivel = info?.semaforo ?? paciente.semaforo;
   const abrir = (pantalla) => () => navigation.navigate(pantalla, { paciente });
+    const [borrando, setBorrando] = useState(false);
+  function confirmarBorrado() {
+    Alert.alert(
+      'Borrar paciente',
+      `¿Borrar a ${paciente.nombre} y todos sus datos (emociones, sesiones, alertas)? No se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Borrar', style: 'destructive',
+          onPress: async () => {
+            setBorrando(true);
+            try {
+              await api.borrarPaciente(paciente.id);
+              navigation.navigate('Mensaje', { texto: 'Paciente borrado', destino: 'BuscarPaciente' });
+            } catch (e) {
+              setError(e.message);
+              setBorrando(false);
+            }
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <Fondo scroll>
@@ -48,7 +71,9 @@ export default function DashboardPacienteScreen({ navigation, route }) {
         </Tarjeta>
       </Pressable>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+      <BotonClaro texto="Borrar paciente" onPress={confirmarBorrado} cargando={borrando} ancho={560}
+        style={{ marginTop: s(60), borderColor: '#8A1C1C' }} />
       <PastillaPaciente paciente={paciente} />
     </Fondo>
   );

@@ -1,7 +1,7 @@
 """
 Backend de Thanatos: ciclo de voz, usuarios y roles, ejercicios de desahogo, riesgo y alertas.
 
-    audio del adulto mayor (con token)
+    audio del adulto mayor
         -> Whisper (ASR)  : audio -> texto (y cuánto tiempo habló)
         -> Riesgo         : verde / amarillo / rojo (rojo NO pasa por el modelo)
         -> Contexto       : emoción registrada hoy + ejemplos de estilo (dataset semilla)
@@ -53,6 +53,36 @@ MENSAJE_LIMITE = (
 # Se agrega al final de la respuesta del turno en el que se alcanza el límite.
 MENSAJE_CIERRE = "Con esto llegamos al tiempo de nuestra conversación. Gracias por compartir conmigo."
 
+# Limpieza de audios: las respuestas habladas pueden repetir lo que contó la persona,
+# así que no se conservan. Se borran las que tengan más de AUDIO_VIGENCIA_MIN minutos.
+# Los audios fijos ("fijo_...": menú, ejercicios, rojo, límite) NO se borran nunca.
+AUDIO_VIGENCIA_MIN = 15
+_CADA_CUANTO_LIMPIAR_S = 5 * 60
+
+
+def _limpiar_audios_viejos() -> int:
+    """Borra de la carpeta de audios los archivos que no son fijos y tienen más de
+    AUDIO_VIGENCIA_MIN minutos. Devuelve cuántos borró. Nunca lanza errores."""
+    limite = time.time() - AUDIO_VIGENCIA_MIN * 60
+    borrados = 0
+    for ruta in settings.audio_dir.glob("*"):
+        try:
+            if ruta.is_file() and not ruta.name.startswith("fijo_") and ruta.stat().st_mtime < limite:
+                ruta.unlink()
+                borrados += 1
+        except OSError:  # p. ej. el archivo se está reproduciendo o ya se borró
+            continue
+    return borrados
+
+
+async def _limpiar_periodicamente() -> None:
+    """Tarea en segundo plano: limpia los audios viejos cada cierto tiempo."""
+    while True:
+        await asyncio.sleep(_CADA_CUANTO_LIMPIAR_S)
+        borrados = await asyncio.to_thread(_limpiar_audios_viejos)
+        if borrados:
+            logger.info("Limpieza: se borraron %d audios de respuesta antiguos.", borrados)
+
 
 def _precalentar_audios_fijos() -> None:
     """Genera de antemano los audios que se repiten (menú, explicaciones de respaldo de los
@@ -69,6 +99,9 @@ def _precalentar_audios_fijos() -> None:
 async def lifespan(app: FastAPI):
     """Al arrancar: crea carpetas, tablas y columnas nuevas, y calienta los modelos."""
     settings.audio_dir.mkdir(parents=True, exist_ok=True)
+    borrados = _limpiar_audios_viejos()   # restos de ejecuciones anteriores
+    if borrados:
+        logger.info("Limpieza al arrancar: se borraron %d audios de respuesta antiguos.", borrados)
     migraciones.aplicar()   # crea tablas nuevas y agrega columnas que falten
     if settings.jwt_secret == "CAMBIAR-EN-ENV":
         logger.warning("JWT_SECRET sin definir: cualquiera podría falsificar tokens. "
@@ -83,7 +116,9 @@ async def lifespan(app: FastAPI):
     if not Path(settings.piper_voice_path).exists():
         logger.warning("No se encontró la voz de Piper en '%s' (solo se usa como respaldo).",
                        settings.piper_voice_path)
+    app.state.tarea_limpieza = asyncio.create_task(_limpiar_periodicamente())
     yield
+    app.state.tarea_limpieza.cancel()   # al apagar el servidor
 
 
 app = FastAPI(title="Thanatos - motor conversacional", lifespan=lifespan)
@@ -316,8 +351,9 @@ async def tiempo_de_conversacion(
 async def obtener_audio(nombre: str):
     """Sirve el audio generado (.mp3 de edge-tts o .wav de Piper).
 
-    OJO: por ahora NO pide token; se protege solo con el nombre aleatorio
-    (uuid). Pendiente endurecerlo. `Path(nombre).name` evita rutas como ../../x.
+    OJO: por ahora NO pide token; se protege con el nombre aleatorio (uuid) y con
+    la limpieza automática (los audios de respuesta duran AUDIO_VIGENCIA_MIN
+    minutos). `Path(nombre).name` evita rutas como ../../x.
     """
     ruta = settings.audio_dir / Path(nombre).name
     if not ruta.is_file():
@@ -325,6 +361,3 @@ async def obtener_audio(nombre: str):
 
     tipo = "audio/mpeg" if ruta.suffix == ".mp3" else "audio/wav"
     return FileResponse(ruta, media_type=tipo)
-
-# TODO: los audios de respuesta se acumulan en tmp_audio/. Falta limpieza periódica
-# (sin borrar los que empiezan con "fijo_").

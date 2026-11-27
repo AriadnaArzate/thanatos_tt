@@ -2,6 +2,7 @@
  * Cliente del backend de Thanatos. Todas las rutas están en thanatos-backend/app.
  * El token JWT se agrega solo; si el servidor responde 401 se cierra la sesión.
  */
+import { File } from 'expo-file-system';
 import { API_URL } from './config';
 
 let token = null;
@@ -39,7 +40,11 @@ async function pedir(ruta, { method = 'GET', json, form, urlencoded, timeoutMs =
   let res;
   try {
     res = await fetch(`${API_URL}${ruta}`, { method, headers, body, signal: control.signal });
-  } catch {
+  } catch (e) {
+    console.log('[api] falló', ruta, e?.name, e?.message);
+    if (e?.name === 'AbortError') {
+      throw new ApiError(0, 'El servidor tardó demasiado en responder. Intente de nuevo.');
+    }
     throw new ApiError(0, 'No se pudo conectar con el servidor. Revise su conexión.');
   } finally {
     clearTimeout(temporizador);
@@ -66,9 +71,11 @@ export const api = {
 
   // --- Adulto mayor ---
   conversar: (uriAudio, sessionId) => {
+    // En Expo SDK 54+ fetch ya no acepta { uri, name, type } en FormData:
+    // el archivo se manda como File de expo-file-system.
+    const archivo = new File(uriAudio);
     const form = new FormData();
-    const ext = (uriAudio.split('.').pop() || 'm4a').toLowerCase();
-    form.append('audio', { uri: uriAudio, name: `audio.${ext}`, type: `audio/${ext === 'm4a' ? 'mp4' : ext}` });
+    form.append('audio', archivo, archivo.name || 'audio.m4a');
     if (sessionId) form.append('session_id', sessionId);
     return pedir('/conversar', { method: 'POST', form });
   },
@@ -81,6 +88,7 @@ export const api = {
 
   // --- Tanatólogo ---
   registrarPaciente: (datos) => pedir('/pacientes', { method: 'POST', json: datos }),
+  borrarPaciente: (id) => pedir(`/pacientes/${id}`, { method: 'DELETE' }),
   pacientesDashboard: () => pedir('/dashboard/pacientes'),
   explicacion: (id) => pedir(`/dashboard/pacientes/${id}/explicacion`),
   metricas: (id, dias = 30) => pedir(`/dashboard/pacientes/${id}/resumen?dias=${dias}`),

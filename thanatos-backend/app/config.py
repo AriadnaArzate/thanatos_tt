@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     piper_cmd: str = ""
 
     # ---------- Conversación y archivos ----------
+    limite_conversacion_minutos: int = 20   # 0 = sin límite en "Hablar ahora"
     max_history_turns: int = 6           # turnos (usuario+asistente) que recuerda
     audio_dir: Path = Path("tmp_audio")  # audios temporales de entrada/salida
 

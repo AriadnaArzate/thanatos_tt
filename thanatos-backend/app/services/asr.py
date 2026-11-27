@@ -2,7 +2,7 @@
 Capa de ASR: voz -> texto con Whisper.
 Usamos `faster-whisper`, una implementación de Whisper (mismo modelo de OpenAI)
 optimizada para CPU. Sigue siendo "Whisper" para efectos del diagrama de
-arquitectura aprobado. Whisper SOLO transcribe: la voz de salida la genera Piper.
+arquitectura aprobado. Whisper SOLO transcribe: la voz de salida la genera edge-tts.
 
 Ventaja práctica: decodifica m4a/mp3/wav/etc. por su cuenta.
 """
@@ -54,17 +54,18 @@ def limpiar_transcripcion(texto: str) -> str:
     return re.sub(r"\s+", " ", texto).strip()
 
 
-def transcribir(ruta_audio: Path) -> str:
-    """Transcribe un archivo de audio a texto en español.
+def transcribir_con_duracion(ruta_audio: Path) -> tuple[str, float]:
+    """Transcribe un audio en español y devuelve (texto, segundos que habló la persona).
 
-    Es una función BLOQUEANTE (usa CPU un rato). Desde código async se llama
-    con `asyncio.to_thread(...)` para no congelar el servidor.
+    Función BLOQUEANTE (usa CPU un rato): desde código async se llama con
+    `asyncio.to_thread(...)`. Los segundos son los de habla detectada por el VAD
+    (sin silencios largos); si no están disponibles, la duración total del audio.
     """
     modelo = precargar_modelo()
-    segmentos, _info = modelo.transcribe(
+    segmentos, info = modelo.transcribe(
         str(ruta_audio),
         language="es",       # fijamos idioma: evita detecciones erróneas
-        beam_size=5,
+        beam_size=settings.whisper_beam_size,
         vad_filter=True,     # ignora silencios largos (útil con pausas al hablar)
         vad_parameters={"min_silence_duration_ms": 1000},
         # Pista de contexto: ayuda a Whisper con el registro y el vocabulario.
@@ -72,4 +73,11 @@ def transcribir(ruta_audio: Path) -> str:
     )
     # `segmentos` es un generador: la transcripción ocurre al recorrerlo.
     texto = " ".join(seg.text.strip() for seg in segmentos)
-    return limpiar_transcripcion(texto)
+    segundos = getattr(info, "duration_after_vad", None) or info.duration or 0.0
+    return limpiar_transcripcion(texto), float(segundos)
+
+
+def transcribir(ruta_audio: Path) -> str:
+    """Solo el texto (se conserva por compatibilidad con scripts anteriores)."""
+    texto, _segundos = transcribir_con_duracion(ruta_audio)
+    return texto

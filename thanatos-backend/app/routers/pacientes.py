@@ -3,11 +3,14 @@ import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Rol, Usuario
+from app.models import (
+    Alerta, Creacion, EjercicioMostrado, Mensaje, RegistroEmocion, ResumenPaciente,
+    Rol, SenalRiesgo, Sesion, Usuario,
+)
 from app.schemas import NuevoPacienteIn, NuevoPinOut, PacienteCreadoOut, UsuarioOut
 from app.security import hashear_password, requiere_rol
 
@@ -55,9 +58,8 @@ def crear_paciente(datos: NuevoPacienteIn, tanatologo: SoloTanatologo,
     db.add(paciente)
     db.commit()
     db.refresh(paciente)
-    salida = PacienteCreadoOut.model_validate(paciente, from_attributes=True)
-    salida.pin = pin
-    return salida
+    datos_salida = UsuarioOut.model_validate(paciente, from_attributes=True).model_dump()
+    return PacienteCreadoOut(**datos_salida, pin=pin)
 
 
 @router.get("", response_model=list[UsuarioOut])
@@ -96,3 +98,20 @@ def nuevo_pin(paciente_id: int, tanatologo: SoloTanatologo, db: Annotated[Sessio
     paciente.password_hash = hashear_password(pin)
     db.commit()
     return NuevoPinOut(numero_paciente=paciente.numero_paciente, pin=pin)
+
+
+@router.delete("/{paciente_id}", status_code=204)
+def borrar_paciente(paciente_id: int, tanatologo: SoloTanatologo, db: Annotated[Session, Depends(get_db)]):
+    """Borra al paciente y TODO lo suyo (sesiones, mensajes, emociones, alertas...).
+    Pensado para pacientes de prueba o duplicados. NO SE PUEDE DESHACER."""
+    paciente = db.get(Usuario, paciente_id)
+    # Mismo 404 si no existe o si es de otro tanatólogo: no se revela cuál fue.
+    if paciente is None or paciente.tanatologo_id != tanatologo.id or paciente.rol != Rol.ADULTO_MAYOR.value:
+        raise HTTPException(404, "Paciente no encontrado")
+    sesiones = select(Sesion.id).where(Sesion.usuario_id == paciente.id)
+    db.execute(delete(Mensaje).where(Mensaje.sesion_id.in_(sesiones)))
+    for tabla in (SenalRiesgo, Alerta, Creacion, RegistroEmocion, ResumenPaciente, EjercicioMostrado):
+        db.execute(delete(tabla).where(tabla.usuario_id == paciente.id))
+    db.execute(delete(Sesion).where(Sesion.usuario_id == paciente.id))
+    db.delete(paciente)
+    db.commit()

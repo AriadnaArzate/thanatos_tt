@@ -36,6 +36,11 @@ def _hubo_senal_reciente(db: Session, sesion_id: str | None) -> bool:
     return any(nivel in ("amarillo", "rojo") for nivel in previos)
 
 
+def hay_senal_reciente(db: Session, sesion_id: str | None) -> bool:
+    """Versión pública: la usa main.py para no cortar por tiempo una sesión con señales."""
+    return _hubo_senal_reciente(db, sesion_id)
+
+
 async def evaluar(
     db: Session,
     usuario: Usuario,

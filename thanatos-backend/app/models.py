@@ -2,7 +2,7 @@
 "Sesiones por ID" y "Frases/Emociones", más alertas y creaciones de ejercicios.
 
 PRIVACIDAD: aquí se guardan TRANSCRIPCIONES y textos que la persona produce.
-No se guarda el audio del usuario. El archivo .db nunca debe subirse a Git.
+No se guarda el audio del usuario. 
 """
 import enum
 from datetime import datetime, timezone
@@ -52,6 +52,8 @@ class Sesion(Base):
     # "conversacion" (libre) o el id de un ejercicio (ver services/ejercicios.py).
     tipo: Mapped[str] = mapped_column(String(30), default="conversacion", server_default="conversacion")
     iniciada_en: Mapped[datetime] = mapped_column(default=_ahora)
+    # Segundos de habla de la persona en esta sesión (para el límite de "Hablar ahora").
+    segundos_usuario: Mapped[float] = mapped_column(default=0.0, server_default="0")
 
 
 class Mensaje(Base):
